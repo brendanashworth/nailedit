@@ -2,9 +2,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
-	"os/exec"
 )
 
 func main() {
@@ -16,7 +14,6 @@ func main() {
 	flag.Parse()
 
 	if *helpFlag {
-		fmt.Printf("\tnailedit\n\n")
 		flag.PrintDefaults()
 		return
 	}
@@ -25,18 +22,14 @@ func main() {
 	inputFile := os.Stdin
 	outputFile := os.Stdout
 
-	// Call into convert.
-	cmd := exec.Command("convert", "-", "-resize", *dimensionFlag, (*formatFlag)+":-")
-	cmd.Stdin = inputFile
-	cmd.Stdout = outputFile
-
-	err := cmd.Run()
+	// First, try to use `convert` to resize the image.
+	err := resizeUsingConvert(inputFile, outputFile, *dimensionFlag, *formatFlag)
 	if err != nil {
-		fmt.Errorf("convert failed, %s\n", err.Error())
+		// `convert` failed (machine may not have it), use resize, a Go library.
+
 		os.Exit(1)
-		// execution ends
+		// execution stops
 	}
 
-	// Output from the `convert` command is piped straight to STDOUT for handling
-	// by the user.
+	// Output is piped straight to STDOUT, we're done!
 }
