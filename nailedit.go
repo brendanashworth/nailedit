@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 )
 
@@ -24,12 +25,18 @@ func main() {
 
 	// First, try to use `convert` to resize the image.
 	err := resizeUsingConvert(inputFile, outputFile, *dimensionFlag, *formatFlag)
-	if err != nil {
-		// `convert` failed (machine may not have it), use resize, a Go library.
-
-		os.Exit(1)
-		// execution stops
+	if err == nil {
+		// Success, stop execution.
+		return
 	}
 
-	// Output is piped straight to STDOUT, we're done!
+	// `convert` failed (machine may not have it), bail out to a native library.
+	err = resizeUsingRez(inputFile, outputFile, *dimensionFlag, *formatFlag)
+	if err != nil {
+		fmt.Printf("error occurred using rez: %s\n", err.Error())
+
+		// rez failed, bail the thumbnail entirely.
+		os.Exit(1)
+	}
+
 }
