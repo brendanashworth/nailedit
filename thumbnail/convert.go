@@ -1,12 +1,12 @@
-package main
+package thumbnail
 
 import (
-	"os"
+	"io"
 	"os/exec"
 )
 
 // Attempts to resize an image using the `convert` command line tool.
-func resizeUsingConvert(input, output *os.File, dimensions, format string) error {
+func resizeUsingConvert(input io.Reader, output io.Writer, dimensions, format string) error {
 	// Call into convert.
 	cmd := exec.Command("convert", "-", "-thumbnail", dimensions, format+":-")
 	cmd.Stdin = input

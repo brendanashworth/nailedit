@@ -4,6 +4,8 @@
 images and changes their format according to passed options and uses the
 fastest available library to do so.
 
+> It also offers an [API](https://godoc.org/github.com/brendanashworth/nailedit/thumbnail).
+
 ## Usage
 
 `nailedit` takes input from STDIN and pipes the thumbnail to STDOUT.

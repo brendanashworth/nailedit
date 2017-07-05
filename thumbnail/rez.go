@@ -1,4 +1,4 @@
-package main
+package thumbnail
 
 import (
 	"fmt"
@@ -6,15 +6,15 @@ import (
 	"image/gif"
 	"image/jpeg"
 	"image/png"
-	"os"
+	"io"
 
 	"github.com/bamiaux/rez"
 )
 
 // Attempts to resize an image using the rez library.
-func resizeUsingRez(inputFile, outputFile *os.File, dimensions, format string) error {
+func resizeUsingRez(inputReader io.Reader, outputWriter io.Writer, dimensions, format string) error {
 	// Get images
-	input, _, err := image.Decode(inputFile)
+	input, _, err := image.Decode(inputReader)
 	if err != nil {
 		return err
 	}
@@ -39,11 +39,11 @@ func resizeUsingRez(inputFile, outputFile *os.File, dimensions, format string) e
 
 	// Write the output image to the output file.
 	if format == "jpeg" {
-		err = jpeg.Encode(outputFile, output, nil)
+		err = jpeg.Encode(outputWriter, output, nil)
 	} else if format == "png" {
-		err = png.Encode(outputFile, output)
+		err = png.Encode(outputWriter, output)
 	} else if format == "gif" {
-		err = gif.Encode(outputFile, output, nil)
+		err = gif.Encode(outputWriter, output, nil)
 	} else {
 		err = fmt.Errorf("unsupported image format '%s' for rez (use jpeg, png, or gif)", format)
 	}

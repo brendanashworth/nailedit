@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+
+	"github.com/brendanashworth/nailedit/thumbnail"
 )
 
 func main() {
@@ -19,24 +21,14 @@ func main() {
 		return
 	}
 
-	// It works directly with stdin and stdout.
-	inputFile := os.Stdin
-	outputFile := os.Stdout
-
-	// First, try to use `convert` to resize the image.
-	err := resizeUsingConvert(inputFile, outputFile, *dimensionFlag, *formatFlag)
-	if err == nil {
-		// Success, stop execution.
-		return
+	options := thumbnail.ThumbnailOptions{
+		Dimensions: *dimensionFlag,
+		Format:     *formatFlag,
 	}
 
-	// `convert` failed (machine may not have it), bail out to a native library.
-	err = resizeUsingRez(inputFile, outputFile, *dimensionFlag, *formatFlag)
+	err := thumbnail.GenerateThumbnail(os.Stdin, os.Stdout, options)
 	if err != nil {
-		fmt.Printf("error occurred using rez: %s\n", err.Error())
-
-		// rez failed, bail the thumbnail entirely.
+		fmt.Errorf("error occurred generating thumbnail: %s\n", err.Error())
 		os.Exit(1)
 	}
-
 }
