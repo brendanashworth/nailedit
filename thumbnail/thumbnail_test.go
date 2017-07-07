@@ -8,24 +8,25 @@ import (
 )
 
 func TestGenerateThumbnail(t *testing.T) {
-	// Generate a thumbnail for testdata/beach.jpg and check the md5 sum
+	// Generate a thumbnail for testdata/car.png and check the md5 sum
 	// with different options. CWD = /thumbnail/
-	img1, err := os.Open("testdata/beach.jpg")
+	img1, err := os.Open("testdata/car.png")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer img1.Close()
 
 	options := ThumbnailOptions{
-		Dimensions: "128x128",
-		Format:     "jpeg",
+		Dimensions:     "128x128",
+		Format:         "jpeg",
+		AvoidLibraries: AvoidRez,
 	}
 
-	var expectedDefault string = "3a696fcddda2a8e089aa2296070840cd"
+	var expectedDefault string = "b89a02391af14cf00d285fd278eb66a6"
 	hash := md5.New()
 
 	err = GenerateThumbnail(img1, hash, options)
-	if err != nil {
+	if err != nil && err != ErrNoLibrary {
 		t.Error(err)
 	} else {
 		if expectedDefault != fmt.Sprintf("%x", hash.Sum(nil)) {
@@ -33,19 +34,20 @@ func TestGenerateThumbnail(t *testing.T) {
 		}
 	}
 
-	// Now do it for a gif.
-	img2, err := os.Open("testdata/car.gif")
+	// Now do it for a jpg.
+	img2, err := os.Open("testdata/beach.jpg")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer img2.Close()
 
 	options = ThumbnailOptions{
-		Dimensions: "64x64",
-		Format:     "gif",
+		Dimensions:     "64x64",
+		Format:         "gif",
+		AvoidLibraries: AvoidConvert,
 	}
 
-	var expectedSmallGIF string = "4b2a4809ae5d62005ecd49260ac8a3b9"
+	var expectedSmallGIF string = "5da7b19111cce28aa31142d8344395bc"
 	hash = md5.New()
 
 	err = GenerateThumbnail(img2, hash, options)
