@@ -3,6 +3,7 @@ package thumbnail
 import (
 	"crypto/md5"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -57,5 +58,17 @@ func TestGenerateThumbnail(t *testing.T) {
 		if expectedSmallGIF != fmt.Sprintf("%x", hash.Sum(nil)) {
 			t.Error("changed options hash does not match expected")
 		}
+	}
+
+	// This should fail with no libraries.
+	options = ThumbnailOptions{
+		Dimensions:     "1x1",
+		Format:         "jpeg",
+		AvoidLibraries: AvoidConvert | AvoidRez,
+	}
+
+	err = GenerateThumbnail(img2, ioutil.Discard, options)
+	if err != ErrNoLibrary {
+		t.Errorf("expected ErrNoLibrary, got %s", err.Error())
 	}
 }
