@@ -8,10 +8,13 @@ go:
   - 1.6
   - 1.7
   - 1.8
-  - tip
 
 script:
   - sh test.sh
+
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update             ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install imagemagick; fi
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
