@@ -1,15 +1,18 @@
 package thumbnail
 
 import (
-	"crypto/md5"
-	"fmt"
+	"bytes"
+	"image"
+	_ "image/gif"
+	_ "image/jpeg"
+	"io/ioutil"
 	"os"
 	"testing"
 )
 
 func TestGenerateThumbnail(t *testing.T) {
-	// Generate a thumbnail for testdata/car.png and check the md5 sum
-	// with different options. CWD = /thumbnail/
+	// Generate a thumbnail for testdata/car.png and check to make sure
+	// it is both a JPEG and 128x78 (convert does it differently).
 	img1, err := os.Open("testdata/car.png")
 	if err != nil {
 		t.Fatal(err)
@@ -22,15 +25,26 @@ func TestGenerateThumbnail(t *testing.T) {
 		AvoidLibraries: AvoidRez,
 	}
 
-	var expectedDefault string = "b89a02391af14cf00d285fd278eb66a6"
-	hash := md5.New()
+	buffer := new(bytes.Buffer)
 
-	err = GenerateThumbnail(img1, hash, options)
-	if err != nil && err != ErrNoLibrary {
+	err = GenerateThumbnail(img1, buffer, options)
+	if err != nil {
+		t.Error(err)
+	}
+
+	img, format, err := image.Decode(buffer)
+	if err != nil {
 		t.Error(err)
 	} else {
-		if expectedDefault != fmt.Sprintf("%x", hash.Sum(nil)) {
-			t.Error("default options hash does not match expected")
+		if format != "jpeg" {
+			t.Errorf("expected jpeg format, got %s", format)
+		}
+
+		// convert should give us a non-square thumbnail
+		width := img.Bounds().Max.X
+		height := img.Bounds().Max.Y
+		if width != 128 || height != 78 {
+			t.Errorf("expected 128x78 dimensions, got %dx%d", width, height)
 		}
 	}
 
@@ -47,15 +61,37 @@ func TestGenerateThumbnail(t *testing.T) {
 		AvoidLibraries: AvoidConvert,
 	}
 
-	var expectedSmallGIF string = "5da7b19111cce28aa31142d8344395bc"
-	hash = md5.New()
+	buffer = new(bytes.Buffer)
 
-	err = GenerateThumbnail(img2, hash, options)
+	err = GenerateThumbnail(img2, buffer, options)
+	if err != nil {
+		t.Error(err)
+	}
+
+	img, format, err = image.Decode(buffer)
 	if err != nil {
 		t.Error(err)
 	} else {
-		if expectedSmallGIF != fmt.Sprintf("%x", hash.Sum(nil)) {
-			t.Error("changed options hash does not match expected")
+		if format != "gif" {
+			t.Errorf("expected gif format, got %s", format)
 		}
+
+		width := img.Bounds().Max.X
+		height := img.Bounds().Max.Y
+		if width != 64 || height != 64 {
+			t.Errorf("expected 64x64 dimensions, got %dx%d", width, height)
+		}
+	}
+
+	// This should fail with no libraries.
+	options = ThumbnailOptions{
+		Dimensions:     "1x1",
+		Format:         "jpeg",
+		AvoidLibraries: AvoidConvert | AvoidRez,
+	}
+
+	err = GenerateThumbnail(img2, ioutil.Discard, options)
+	if err != ErrNoLibrary {
+		t.Errorf("expected ErrNoLibrary, got %s", err.Error())
 	}
 }
